@@ -37,7 +37,7 @@ export function Kanban() {
       const toStatus = over.id;
 
       if (!(fromStatus in rules && rules[fromStatus].includes(toStatus))) {
-        toast.error("Abey Saley")
+        toast.error("sorry you cannot do that!!!")
         return
       }
 

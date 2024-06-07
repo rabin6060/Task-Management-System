@@ -10,7 +10,7 @@ import {Activity} from '../Activity/type'
 
 export const TaskController = {
     async create(req:Request<unknown,unknown,Task>,res:Response,next:NextFunction){
-         try {
+    try {
       const taskData = req.body;
       const newTask = await TaskService.createTask(taskData);
       return successResponse({
@@ -77,7 +77,6 @@ export const TaskController = {
                 'InProgress':['Assigned','Completed'],
                 'Completed':[]
             }     
-            console.log(status,task.status)
             if (!(status in rules && rules[status].includes(task.status))) {
                 return errorResponse({
                     response: res,

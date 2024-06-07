@@ -41,6 +41,7 @@ import { useUser } from "@/Context/UserContext"
 import axios from "axios"
 import { useActiveItems } from "@/Context/ActiveComponent"
 import TaskDetail from "../DetailPage"
+import { format } from "date-fns"
 
 
 const filterTags = (row:any, columnId:any, filterValue:any) => {
@@ -122,7 +123,7 @@ const getColumns = (
       cell: ({ row }) => {
         const PriorityValue = row.getValue("priority") as priorityValue
     const PriorityColor = priorityColor[PriorityValue]
-    return <div className={PriorityColor}>{PriorityValue}</div>
+    return <div className={`${PriorityColor} capitalize`}>{PriorityValue}</div>
       }
     },
     {
@@ -130,16 +131,30 @@ const getColumns = (
       header: () => <div className="text-right">Assigner</div>,
       cell: ({ row }) => <div className="text-right font-medium">{row.original.assigner?.username}</div>
     },
-    {
-      accessorKey: "tags",
-      header: () => <div className="text-right">Tags</div>,
-      cell: ({ row }) => <div className="text-right font-medium">{row.getValue("tags") }</div>,
-      filterFn:filterTags
-    },
+   {
+  accessorKey: "tags",
+  header: () => <div className="text-right">Tags</div>,
+  cell: ({ row }) => {
+    const tags = row.getValue("tags");
+
+    return (
+      <div className="text-right font-medium">
+        {Array.isArray(tags) ? (
+          tags.map((tag, index) => (
+            <span key={index} className="text-teal-500 ml-1 bg-slate-100 p-2 rounded-full">{tag}</span>
+          ))
+        ) : (
+          "No tags"
+        )}
+      </div>
+    );
+  },
+  filterFn: filterTags
+},
     {
       accessorKey: "dueDate",
       header: () => <div className="text-right">DueDate</div>,
-      cell: ({ row }) => <div className="text-right font-medium">{row.getValue("dueDate")}</div>
+      cell: ({ row }) => <div className="text-right font-medium">{format(row.getValue("dueDate"), 'MMMM d, yyyy h:mm a')}</div>
     },
     {
       id: "actions",

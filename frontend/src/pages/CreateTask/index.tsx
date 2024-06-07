@@ -199,7 +199,7 @@ const Task = () => {
                         mode="single"
                         selected={new Date(field.value)}
                         onSelect={(date) => field.onChange(date ? date.toISOString() : '')}
-                        disabled={(date) => date > new Date() || date < new Date('1900-01-01')}
+                        disabled={(date) => date >= new Date("2025-01-01") || date < new Date()}
                         initialFocus
                       />
                     </PopoverContent>

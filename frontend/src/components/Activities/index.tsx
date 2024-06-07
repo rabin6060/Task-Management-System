@@ -15,18 +15,13 @@ import { format } from 'date-fns';
 interface Activities{
 
 _id : string
-
 userId :string
-
 taskId :{
   title:string
 }
-
 TaskStatus : string
-
 Assigner :string
 updatedAt:string
-
 __v:number
 
 }
@@ -71,10 +66,10 @@ export function Activities() {
                 activities?.map(activity=>(
                     <div key={activity._id} className="flex gap-5 shadow-md p-2">
                         <div>
-                            <h1>Assigner : <span className="text-teal-500">{activity.Assigner.toUpperCase()}</span></h1>
-                            <h1>Task Title : <span className="text-teal-500">{activity.taskId?.title.toUpperCase()}</span></h1>
-                            <p>Activity : {activity.TaskStatus}</p>
-                            <p>UpdatedAt : <span className="text-orange-500">{format(activity.updatedAt, 'MMMM d, yyyy h:mm a')}</span></p>
+                            <p className="text-slate-500">Assigner : <span className="text-teal-500">{activity.Assigner.toUpperCase()}</span></p>
+                            <p className="text-slate-500">Task Title : <span className="text-teal-500">{activity.taskId?.title.toUpperCase()}</span></p>
+                            <p className="text-slate-500">Activity : {activity.TaskStatus}</p>
+                            <p className="text-slate-500 text-sm">UpdatedAt : <span className="text-orange-500">{format(activity.updatedAt, 'MMMM d, yyyy h:mm a')}</span></p>
                         </div>
                         
                     </div>
