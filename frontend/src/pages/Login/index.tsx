@@ -17,12 +17,18 @@ import { useUser } from "@/Context/UserContext"
 import SingUpAnimation from '../../assets/signup.json'
 import Lottie from 'lottie-react'
 import { toast } from "sonner"
+import { z } from "zod"
+import { zodResolver } from "@hookform/resolvers/zod"
 
 
 interface Error{
     message:string,
     status:string
 }
+const schema = z.object({
+  email: z.string().email("Invalid email address").nonempty("Email is required"),
+  password: z.string().min(6, "Password must be at least 6 characters").nonempty("Password is required"),
+});
 
 
 const Login = () => {
@@ -32,6 +38,7 @@ const Login = () => {
       email: "",
       password: "",
     },
+    resolver:zodResolver(schema)
   }
   )
   const navigate = useNavigate()

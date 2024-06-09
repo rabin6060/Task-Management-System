@@ -16,12 +16,22 @@ import { signup } from "@/api/user"
 import SingUpAnimation from '../../assets/signup.json'
 import Lottie from 'lottie-react'
 import { toast } from "sonner"
+import { z } from "zod"
+import { zodResolver } from "@hookform/resolvers/zod"
 
 interface Error{
     message:string,
     status:string
 }
-
+const schema = z.object({
+  username: z.string().min(3,"Username must contain at least 3 characters"),
+  email: z.string().email("Invalid email address").min(1,"Email is required"),
+  password: z
+    .string()
+    .min(6, "Password must be at least 6 characters")
+    .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
+    .regex(/[!@#$%^&*(),.?":{}|<>]/, "Password must contain at least one special character")
+});
 
 const Signup = () => {
   const form = useForm(
@@ -31,6 +41,7 @@ const Signup = () => {
       email: "",
       password: "",
     },
+    resolver:zodResolver(schema)
   }
   )
   const navigate = useNavigate()
