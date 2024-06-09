@@ -15,7 +15,6 @@ const Header = () => {
   const [show, setShow] = useState<boolean>(false);
   const [error, setError] = useState<Error | null>(null);
   const { user, setUser } = useUser();
-  console.log(user)
   const handleLogout = async () => {
     try {
       await logout(user?.data?._id);
@@ -40,7 +39,7 @@ const Header = () => {
             <>
               <div
                 className='cursor-pointer relative text-teal-500 text-lg font-[900]'
-                onClick={() => setShow(true)}
+                onClick={() => setShow(prev=>!prev)}
               >
                 {user?.data?.username}
               </div>
