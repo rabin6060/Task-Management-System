@@ -77,10 +77,11 @@ export const TaskController = {
                 'InProgress':['Assigned','Completed'],
                 'Completed':[]
             }     
-            if (!(status in rules && rules[status].includes(task.status))) {
+            
+            if (!(task.status in rules && rules[task.status].includes(status))) {
                 return errorResponse({
                     response: res,
-                    message: 'K garya Vai k garya!!',
+                    message: `you cannot move from ${task.status} to ${status}`,
                 });
             }
 
