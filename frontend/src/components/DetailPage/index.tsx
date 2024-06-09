@@ -19,7 +19,7 @@ interface TaskDetailProps {
 }
 
 const TaskDetail: React.FC<TaskDetailProps> = ({ task, setShowDetail }) => {
-  const { setSingleTaskInfo,singleTaskInfo } = useTask();
+  const { setSingleTaskInfo } = useTask();
   const { setShowUpdate } = useActiveItems();
   const {user} = useUser()
   const [comment,setComment] = useState<string>('')
@@ -117,7 +117,7 @@ if (diffInDays > 0) {
   differenceText = 'Due date has passed';
 }
 
-console.log(user?.data._id===task?.assigner)
+
   return (
     <div className={`inset-0 fixed w-full h-auto bg-gray-900 bg-opacity-50 flex justify-end items-center z-50`}>
       {task && (
@@ -129,7 +129,7 @@ console.log(user?.data._id===task?.assigner)
           <div className='space-y-2'>
             <h3 className="text-slate-500 text-xl">Description:</h3>
             <p className='text-sm text-slate-400'>
-              Lorem ipsum dolor sit amet consectetur adipisicing elit. Iure ratione nobis odit cupiditate quis, modi repudiandae officiis adipisci, esse quibusdam, fugit ipsa quidem sed aut deserunt ea recusandae omnis delectus.
+              {task?.desc}
             </p>
            
           </div>
@@ -160,8 +160,11 @@ console.log(user?.data._id===task?.assigner)
             </div>
             <Button type='submit' onClick={(e)=>handleAdd(e)} className='bg-teal-500 hover:bg-purple-500 w-auto'>Add</Button>
           </form>
-          <div className='flex flex-col gap-2 h-[300px] overflow-y-scroll'>
+          {
+            task.comments.length>0 ?
+            <div className='flex flex-col gap-2 h-[300px] overflow-y-auto'>
             {
+              
               task.comments.map(comment=>(
                 <div key={comment._id} className='bg-slate-50 shadow-md p-2 space-y-2'>
                   <p className='text-slate-500 text-[14px]'>Comment: <span className='text-teal-500'>{comment.content}</span></p>
@@ -172,11 +175,12 @@ console.log(user?.data._id===task?.assigner)
                     </div>
                     <p className='text-slate-500'>Added by : <span className='text-teal-500'>{comment.user}</span></p>
                   </div>
-                  
                 </div>
               ))
             }
           </div>
+          : <div className='text-lg text-slate-500'>No Comments</div>
+          }
           <div className="flex items-center gap-3">
             <Button
               type="button"
