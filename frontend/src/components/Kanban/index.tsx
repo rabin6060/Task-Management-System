@@ -6,6 +6,7 @@ import { useTask } from '@/Context/TaskContext';
 import { toast } from 'sonner';
 import { updateStatus } from '@/api/task';
 import axios from 'axios';
+import { format } from 'date-fns';
 
 
 export function Kanban() {
@@ -27,20 +28,11 @@ export function Kanban() {
         return;
       }
 
-      const rules: Record<string, string[]>  = {
-        'Assigned':['InProgress'],
-        'InProgress':['Assigned','Completed'],
-        'Completed':[]
-      }
-
+      
       const fromStatus = activeTask.status;
       const toStatus = over.id;
-
-      if (!(fromStatus in rules && rules[fromStatus].includes(toStatus))) {
-        toast.error("sorry you cannot do that!!!")
-        return
-      }
-
+      
+      
       // Updating the task status locally before making the API call
       setTasks((prevTasks) =>
         prevTasks.map((task) =>
@@ -76,10 +68,11 @@ export function Kanban() {
       .filter((task) => task.status === status)
       .map((task) => (
         <Draggable key={task._id} id={task._id}>
-          <div className='bg-slate-100 h-auto rounded-lg mb-2 p-2 text-teal-500 hover:bg-slate-200 hover:text-white capitalize'>
+          <div className='bg-slate-100 h-auto rounded-lg mb-2 p-2 text-slate-500 hover:bg-slate-200 hover:text-white capitalize'>
             <h1>Title: {task.title}</h1>
             <p>Desc: {task.desc}</p>
             <p>Status: {task.status}</p>
+            <p className='text-sm text-slate-500'>DueDate: {format(task.dueDate, 'MMMM d, yyyy h:mm a')}</p>
           </div>
         </Draggable>
       ));
