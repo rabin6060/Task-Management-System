@@ -10,13 +10,12 @@ const AuthController = {
   async login(req: Request<unknown, unknown, Auth>, res: Response) {
     try {
       const body = req.body;
-      const { accessToken } = await AuthService.login(body);
-      const user = await UserService.updateUserWithToken(body.email,accessToken);
+      const { User } = await AuthService.login(body);
       return successResponse({
         status: 200,
         response: res,
         message: messages.auth.login_success,
-        data: user,
+        data: User,
       });
     } catch (error) {
       errorHandler(res, error);

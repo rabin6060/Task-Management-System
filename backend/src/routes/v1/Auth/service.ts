@@ -5,6 +5,7 @@ import { messages } from '../../../utils/Messages';
 import { signJwt, verifyJwt } from '../../../utils/Jwt';
 import { omit } from '../../../utils';
 import { userPrivateFields } from '../Users/model';
+import UserService from '../Users/service';
 
 const AuthService = {
   async login(data: Auth) {
@@ -14,18 +15,20 @@ const AuthService = {
     const isValid = await user.comparePassword(data.password);
     if (!isValid) throw new CustomError(messages.auth.invalid_account, 401);
 
-    const accessToken = signJwt(omit(user.toJSON(), userPrivateFields), 'accessToken', { expiresIn: '1h' });
+    const accessToken = signJwt(omit(user.toJSON(), userPrivateFields), 'accessToken', { expiresIn: '7d' });
+    const User = await UserService.updateUserWithToken(data.email,accessToken);
     const refreshToken = signJwt({ userId: user._id.toString() }, 'refreshToken', { expiresIn: '30d' });
 
     return {
       accessToken,
       refreshToken,
+      User
     };
   },
 
   async verifyToken(token: string, type: 'accessToken' | 'refreshToken') {
     const user = verifyJwt(token, type);
-    console.log(user);
+    return user
   },
 };
 
