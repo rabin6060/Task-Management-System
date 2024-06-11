@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 import { updateStatus } from '@/api/task';
 import axios from 'axios';
 import { format } from 'date-fns';
+import { useRefresh } from '@/Context/RefreshPage';
 
 
 export function Kanban() {
@@ -17,6 +18,7 @@ export function Kanban() {
   ];
   const { task: taskData } = useTask();
   const [tasks, setTasks] = useState(taskData);
+  const {setRefresh} = useRefresh()
 
   const handleDragEnd = async (event:any) => {
     const { active, over } = event;
@@ -44,6 +46,7 @@ export function Kanban() {
         const response = await updateStatus(active.id, toStatus);
         if (response) {
         toast.success('Updated successfully!');
+        setRefresh(true)
       }
         
       } catch (error) {
@@ -68,11 +71,11 @@ export function Kanban() {
       .filter((task) => task.status === status)
       .map((task) => (
         <Draggable key={task._id} id={task._id}>
-          <div className='bg-slate-100 h-auto rounded-lg mb-2 p-2 text-slate-500 hover:bg-slate-200 hover:text-white capitalize'>
+          <div className='bg-slate-100 h-auto rounded-lg mb-2 p-2 text-slate-500 hover:bg-slate-300 hover:text-white capitalize'>
             <h1>Title: {task.title}</h1>
             <p>Desc: {task.desc}</p>
             <p>Status: {task.status}</p>
-            <p className='text-sm text-slate-500'>DueDate: {format(task.dueDate, 'MMMM d, yyyy h:mm a')}</p>
+            <p className='text-sm'>DueDate: {format(task.dueDate, 'MMMM d, yyyy h:mm a')}</p>
           </div>
         </Draggable>
       ));
