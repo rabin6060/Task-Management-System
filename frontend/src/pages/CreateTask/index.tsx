@@ -18,6 +18,7 @@ import { createTask } from '@/api/task';
 import Select from 'react-select'
 import { toast } from 'sonner';
 import { useActiveItems } from '@/Context/ActiveComponent';
+import { useRefresh } from '@/Context/RefreshPage';
 
 interface Error {
   message: string;
@@ -26,8 +27,8 @@ interface Error {
 
 // Define Zod schema for form validation
 const taskSchema = z.object({
-  title: z.string().min(1, { message: 'Title is required' }),
-  desc: z.string().min(1, { message: 'Description is required' }),
+  title: z.string().trim().min(1, { message: 'Title is required' }),
+  desc: z.string().trim().min(1, { message: 'Description is required' }),
   tags: z.array(z.string()).min(1, { message: 'At least one tag is required' }),
   assignee: z.array(z.string()).min(1, { message: 'At least one assignee is required' }),
   dueDate: z.string().min(1, { message: 'Due date is required' }),
@@ -65,6 +66,8 @@ const Task = () => {
   const [error, setError] = useState<Error | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const { user,users } = useUser();
+  const {setRefresh} = useRefresh()
+  const {setActiveItem} = useActiveItems()
   
   
   const allAssigneeMatra = users?.data.filter(use=>use?._id!==user?.data?._id)
@@ -87,6 +90,8 @@ const Task = () => {
         setShow(false);
       }
       setLoading(false);
+      setRefresh(true)
+      setActiveItem("TaskCreated")
       toast.success("task created successFully!!")
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {
@@ -98,7 +103,7 @@ const Task = () => {
       }
     }
   };
- 
+
   
   return (
     <section className=" z-50 overflow-y-auto">

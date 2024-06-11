@@ -19,6 +19,7 @@ import Select from 'react-select'
 import { toast } from 'sonner';
 import { useActiveItems } from '@/Context/ActiveComponent';
 import { useTask } from '@/Context/TaskContext';
+import { useRefresh } from '@/Context/RefreshPage';
 
 interface Error {
   message: string;
@@ -67,7 +68,7 @@ const Updated = () => {
   const [error, setError] = useState<Error | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const { user,users } = useUser();
- console.log(error)
+  const {setRefresh} = useRefresh()
   
   const allAssigneeMatra = users?.data.filter(use=>use?._id!==user?.data?._id)
   const assigneesInfo:string[] = []
@@ -88,6 +89,7 @@ const Updated = () => {
       if (response) {
         setError(null);
         setShowUpdate(false);
+        setRefresh(true)
       }
       setLoading(false);
       toast.success("updated successFully!!")
@@ -101,7 +103,7 @@ const Updated = () => {
       }
     }
   };
- 
+ console.log(singleTaskInfo)
   
   return (
     <section className=" z-50 overflow-y-auto">

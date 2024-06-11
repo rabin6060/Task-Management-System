@@ -1,4 +1,4 @@
-import { MouseEventHandler, useEffect, useState } from "react"
+import { MouseEventHandler, useState } from "react"
 import {
   ColumnDef,
   ColumnFiltersState,
@@ -34,14 +34,16 @@ import {
   TableRow,
 } from "@/components/ui/table"
 
-import { deleteTasks, getAllTask, singleTask, updateStatus } from "@/api/task"
+import { deleteTasks, singleTask, updateStatus } from "@/api/task"
 import { useTask } from "@/Context/TaskContext"
 import {toast} from 'sonner'
-import { useUser } from "@/Context/UserContext"
+
 import axios from "axios"
 import { useActiveItems } from "@/Context/ActiveComponent"
 import TaskDetail from "../DetailPage"
 import { format } from "date-fns"
+import {  SkeletonDemo } from "../Skeleton"
+import { useRefresh } from "@/Context/RefreshPage"
 
 
 const filterTags = (row:any, columnId:any, filterValue:any) => {
@@ -221,15 +223,17 @@ export const List:React.FC<TaskProps> = ({task}) =>{
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
   const [rowSelection, setRowSelection] = useState({})
-  const [refresh,setRefresh] = useState<boolean>(false)
+  const {setRefresh,loading} = useRefresh()
   const {activeItem,setActiveItem} = useActiveItems()
-  const {setTask} = useTask()
-  const {user} = useUser()
+  const {setSingleTaskInfo} = useTask()
+  
   const [showDetail,setShowDetail] = useState<boolean>(false)
-  const [singleTaskInfo,setSingleTaskInfo] = useState<Task | null>()
+  const [id,setId] = useState<string>('')
+
   const viewDetail = async(id:string) => {
     setShowDetail(true)
-    try {
+    setId(id)
+     try {
     const res = await singleTask(id)
     if (!res) {
       toast.error("Oops. No task")
@@ -287,7 +291,7 @@ export const List:React.FC<TaskProps> = ({task}) =>{
     try {
       await Promise.all(res.map((id) => deleteTask(id)));
       toast.success("All selected tasks deleted successfully!");
-      
+      setRefresh(true)
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {
         if (error.response) {
@@ -296,6 +300,7 @@ export const List:React.FC<TaskProps> = ({task}) =>{
       }
     }
   };
+  
   const handleClick: MouseEventHandler<HTMLDivElement> =async (event) => {
     const item = (event.currentTarget as HTMLDivElement).innerText;
     
@@ -305,6 +310,7 @@ export const List:React.FC<TaskProps> = ({task}) =>{
       toast.error("update failed!!")
      }
      toast.success("Status Updated Successfully!!!")
+     setRefresh(true)
      setActiveItem(item)
     } catch (error:unknown) {
      if (axios.isAxiosError(error)) {
@@ -319,24 +325,13 @@ export const List:React.FC<TaskProps> = ({task}) =>{
       activeItem === item ? 'bg-teal-500' : ''
     }`;
   
-  useEffect(()=>{
-    async function getTask(){
-      try {
-        const response = await getAllTask(user?.data._id)
-        if (!response) {
-          toast("Sorry no tasks")
-        }
-        setTask(response?.data.data)
-      } catch (error) {
-        toast("Fetched Error!!!")
-      }
-    }
-    getTask()
-  },[refresh])
-  
+
   
   return (
     <section className="h-[80vh]">
+      {
+        loading ? <SkeletonDemo/>
+        :
       <div className="h-full w-full relative">
         <div className="flex items-center py-4">
           <Input
@@ -347,7 +342,7 @@ export const List:React.FC<TaskProps> = ({task}) =>{
             }
             className="max-w-sm ml-4"
           />
-          <Button onClick={()=>setRefresh((prev)=>!prev)} type="button" className="ml-2 bg-teal-500 hover:bg-purple-500">Refresh</Button>
+          <Button onClick={()=>setRefresh(true)} type="button" className="ml-2 bg-teal-500 hover:bg-purple-500">Refresh</Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" className="ml-auto">
@@ -479,12 +474,11 @@ export const List:React.FC<TaskProps> = ({task}) =>{
           
           {
             showDetail && 
-            <TaskDetail task={singleTaskInfo} setShowDetail={setShowDetail}/>
+            <TaskDetail id={id} setShowDetail={setShowDetail}/>
           }
-
-        
-        
       </div>
+      }
+      
     </section>
     
   )

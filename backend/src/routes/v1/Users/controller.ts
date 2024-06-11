@@ -41,7 +41,6 @@ const UserController = {
   async verifyUser(req:Request<{email:string},unknown,{pin:string}>,res:Response){
     
     const {pin} = req.body
-    console.log(pin)
     const {email} = req.params
     const user = await UserService.getUser(email)
     if (!user) {
@@ -50,7 +49,9 @@ const UserController = {
         message:messages.user.verification_failed,
       })
     }
+    console.log(user)
     let userAttempts = user.verificationAttempt || 0
+    console.log(user.verificationAttempt)
     if (userAttempts >= 4) {
       await UserService.deleteUser(email);
       return errorResponse({
@@ -67,6 +68,8 @@ const UserController = {
         message: messages.user.verification_failed,
       });
     }
+    user.verificationAttempt = 0;
+    await user.save();
     
     const data = await UserService.updateUserInfo(user.email)
     return  successResponse({

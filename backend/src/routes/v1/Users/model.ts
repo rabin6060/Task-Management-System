@@ -7,7 +7,7 @@ export interface User {
   email: string;
   password: string;
   pin?:string,
-  verificationAttempt?:number | undefined,
+  verificationAttempt?:number | 0,
   accessToken?:string
 }
 

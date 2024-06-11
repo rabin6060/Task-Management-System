@@ -27,7 +27,7 @@ const UserService = {
     return updateUserById(id,username)
   },
   getUsers() {
-    return getAllUsers().select('-__v -createdAt -updatedAt -verificationAttempt');
+    return getAllUsers()
   },
   deleteUser(email:string){
     return deleteUserByEmail(email)

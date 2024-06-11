@@ -10,7 +10,7 @@ export const getAllUsers = () => {
 };
 
 export const getUserByEmail = (email: string) => {
-  return UserModel.findOne({ email: email }).select('-__v -createdAt -updatedAt -verificationAttempt -password')
+  return UserModel.findOne({ email: email }).select('-__v -createdAt -updatedAt -password')
 };
 
 export const updateUserWithToken = async(email: string, accessToken: string)=> {
