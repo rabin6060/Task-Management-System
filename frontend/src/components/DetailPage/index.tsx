@@ -1,5 +1,5 @@
 import { Task } from '@/pages/CreateTask/type';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button } from '../ui/button';
 import {  deleteTasks, singleTask } from '@/api/task';
 import { toast } from 'sonner';
@@ -7,31 +7,40 @@ import axios from 'axios';
 import {format} from 'date-fns'
 
 import { useActiveItems } from '@/Context/ActiveComponent';
-import { useTask } from '@/Context/TaskContext';
 import { addComment, deleteComment } from '@/api/comment';
 import { MdDelete } from "react-icons/md";
 import { useUser } from '@/Context/UserContext';
+import { TaskDetailsSkeleton } from '../SkeletonDetail';
+import { useRefresh } from '@/Context/RefreshPage';
 // Adjust the import path as needed
 
 interface TaskDetailProps {
-  task: Task | null | undefined;
+  id: string | '';
   setShowDetail: (showDetail: boolean) => void;
 }
 
-const TaskDetail: React.FC<TaskDetailProps> = ({ task, setShowDetail }) => {
-  const { setSingleTaskInfo } = useTask();
+const TaskDetail: React.FC<TaskDetailProps> = ({ id, setShowDetail }) => {
   const { setShowUpdate } = useActiveItems();
   const {user} = useUser()
   const [comment,setComment] = useState<string>('')
+  
+  const [task,setSingleTaskInfo] = useState<Task | undefined>()
+  const {setRefresh,loading} = useRefresh()
+  const [ref,setRef] = useState<boolean>(false)
 
   
   const handleDelete = async (id: string) => {
+    const confirmation = confirm("are you sure??")
+    if (!confirmation) {
+      return
+    }
     try {
       const res = await deleteTasks(id);
       if (!res) {
         toast.error('Oops. Not Deleted');
       }
       setShowDetail(false);
+      setRefresh(true)
       toast.success('Deleted !!!');
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {
@@ -50,6 +59,7 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ task, setShowDetail }) => {
       setSingleTaskInfo(res && res.data.data);
       setShowDetail(false);
       setShowUpdate(true);
+      
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {
         if (error.response) {
@@ -61,13 +71,14 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ task, setShowDetail }) => {
 
   const handleAdd = async(e:any) => {
     e.preventDefault()
-    setComment('')
+    
     try {
       const res = await addComment(task?._id,comment)
       if (!res) {
         toast.error("sorry cannot be added!!!")
       }
-      setShowDetail(false)
+      setRef(prev=>!prev)
+      setComment('')
       toast.success('Added SuccessFully!!!')
     } catch (error) {
       toast.error('Sorry We got a Error!!!')
@@ -79,28 +90,41 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ task, setShowDetail }) => {
       if (!res) {
         toast.error("Oops not deleted")
       }
-      setShowDetail(false)
+      setRef(prev=>!prev)
       toast.success('Comment Deleted SuccessFully!!')
     } catch (error) {
       toast.error('Sorry Error Not Deleted')
     }
   }
+  
+  useEffect(()=>{
+    const fetch = async (id:string) => {
+       
+    try {
+    const res = await singleTask(id)
+    if (!res) {
+      toast.error("Oops. No task")
+     
+    }
+    
+    setSingleTaskInfo(res && res.data.data)
+   // toast.success("Task Fetched Successfully !!!")
+  } catch (error:unknown) {
+     if (axios.isAxiosError(error)) {
+       if (error.response) {
+        toast.error(error.response?.data?.message)
+        
+      }
+     }
+    }
+    }
+    fetch(id)
+  },[id,ref])
 
-const taskDueDate = new Date(task?.dueDate || '');
+const taskDueDate = new Date(task && task?.dueDate || '');
 const now = new Date();
 
-if (isNaN(taskDueDate.getTime()) || isNaN(now.getTime())) {
-  console.error("Invalid date");
-  return (
-    <p className="text-slate-500 text-xl">
-      <strong>Due Date: <span className='text-red-500'>Invalid date</span></strong>
-    </p>
-  );
-}
-
-
 const diffInMs = taskDueDate.getTime() - now.getTime();
-
 
 const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
 const diffInHours = Math.floor((diffInMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
@@ -117,11 +141,14 @@ if (diffInDays > 0) {
   differenceText = 'Due date has passed';
 }
 
-
   return (
     <div className={`inset-0 fixed w-full h-auto bg-gray-900 bg-opacity-50 flex justify-end items-center z-50`}>
-      {task && (
+      
         <div className="bg-white w-full h-full sm:max-w-[30%] p-6 rounded-lg shadow-lg space-y-5">
+          {
+            loading ? <TaskDetailsSkeleton/>
+            :
+          <>
           <h2 className="text-5xl font-bold mb- text-teal-500">Task Details</h2>
           <p className="text-slate-500 text-xl">
             Title: <span className='text-lg'>{task?.title.toUpperCase()}</span>
@@ -150,7 +177,15 @@ if (diffInDays > 0) {
           </p>
           <p className="text-slate-500 text-xl">
             Tags:
-            <span className='bg-slate-100 p-2 rounded-full ml-2'>{task?.tags?.join(', ')}</span>
+            {
+              task?.tags?
+              task.tags.map((tag)=>(
+                 <span key={tag} className='bg-slate-100 p-2 rounded-full ml-2'>{tag}</span>
+              ))
+              :
+              <span>No Tags</span>
+            }
+           
              
           </p>
           <form className='flex gap-3'>
@@ -161,7 +196,7 @@ if (diffInDays > 0) {
             <Button type='submit' onClick={(e)=>handleAdd(e)} className='bg-teal-500 hover:bg-purple-500 w-auto'>Add</Button>
           </form>
           {
-            task.comments.length>0 ?
+           task && task.comments.length>0 ?
             <div className='flex flex-col gap-2 h-[300px] overflow-y-auto'>
             {
               
@@ -194,21 +229,25 @@ if (diffInDays > 0) {
               type="button"
               disabled = {!(user?.data._id===task?.assigner._id)}
               className=" bg-red-500 text-white text-xl px-4 py-2 rounded hover:bg-purple-500"
-              onClick={() => handleDelete(task._id)}
+              onClick={() =>task &&  handleDelete(task?._id)}
             >
               Delete
             </Button>
             <Button
               type="button"
-              disabled = {!(user?.data._id===task.assigner._id)}
+              disabled = {!(user?.data._id===(task && task.assigner._id))}
               className=" bg-orange-500 text-white text-xl px-4 py-2 rounded hover:bg-purple-500"
-              onClick={() => handleEdit(task._id)}
+              onClick={() =>task && handleEdit(task._id)}
             >
               Edit
             </Button>
           </div>
+          </>
+          }
+          
+          
         </div>
-      )}
+      
     </div>
   );
 };
