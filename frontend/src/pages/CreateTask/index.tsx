@@ -1,4 +1,4 @@
-import { useForm, useFieldArray, SubmitHandler } from 'react-hook-form';
+import { useForm, SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
@@ -23,6 +23,11 @@ import { useRefresh } from '@/Context/RefreshPage';
 interface Error {
   message: string;
   status: string;
+}
+
+export interface multiSelect {
+  label:string | "",
+  value:string | ""
 }
 
 // Define Zod schema for form validation
@@ -57,17 +62,34 @@ const Task = () => {
       assigner: '',
     },
   });
-  const { control, register, handleSubmit } = form;
-  const { fields, append, remove } = useFieldArray({
-    control,
-    name: 'tags',
-  });
- const [selectedOption, setSelectedOption] = useState(null);
+  const { control, handleSubmit } = form;
+  
+ const [selectedOption, setSelectedOption] = useState<multiSelect[]>([]);
   const [error, setError] = useState<Error | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const { user,users } = useUser();
   const {setRefresh} = useRefresh()
   const {setActiveItem} = useActiveItems()
+   const [tags, setTags] = useState<string[]>([]);
+  const [currentTag, setCurrentTag] = useState<string>('');
+
+  const handleTagChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setCurrentTag(event.target.value);
+  };
+
+  const handleAddTag = () => {
+    if (currentTag.trim() !== '') {
+      setTags([...tags, currentTag.trim()]);
+      setCurrentTag(''); // Clear the input field after adding a tag
+    }
+  };
+  const removeTag = (tag:string) => {
+    if (tags.includes(tag)) {
+      setTags(tags.filter(tag => tag !== tag));
+    }
+  }
+  
+
   
   
   const allAssigneeMatra = users?.data.filter(use=>use?._id!==user?.data?._id)
@@ -84,6 +106,7 @@ const Task = () => {
       }
       values.assigner = user && user.data._id;
       values.assignee = assigneesInfo
+      values.tags = tags
       const response = await createTask(values);
       if (response) {
         setError(null);
@@ -103,7 +126,6 @@ const Task = () => {
       }
     }
   };
-
   
   return (
     <section className=" z-50 overflow-y-auto">
@@ -137,22 +159,23 @@ const Task = () => {
               )}
             />
             <FormItem className="space-y-5">
-              <FormLabel className="text-teal-500 text-lg">Tags</FormLabel>
-              {fields.map((field, index) => (
-                <div key={field.id} className="flex items-center space-x-2">
-                  <FormControl>
-                    <Input
-                      {...register(`tags.${index}` as const)}
-                      defaultValue={'task'} // Assign the correct value
-                      placeholder="tags"
-                    />
-                  </FormControl>
-                  <Button type="button" onClick={() => remove(index)}>
-                    Remove
-                  </Button>
+              <FormLabel className="text-teal-500 text-lg flex">Tags</FormLabel>
+              <Input type="text" placeholder='enter the tag' value={currentTag} onChange={handleTagChange} />
+              <Button type="button" className='bg-teal-500 hover:bg-purple-500' onClick={handleAddTag}>Add Tag</Button>
+              {
+                tags.length > 0 ?
+                <div>
+                  {
+                    tags.map(tag=>(
+                      <div className='bg-slate-100 shadow-md inline px-2 py-1 rounded-full cursor-pointer mr-2' onClick={()=>removeTag(tag)}>{tag} <span className='text-red-500'>x</span></div>
+                    ))
+                  }
                 </div>
-              ))}
-              <Button type="button" className='bg-teal-500 hover:bg-purple-500' onClick={() => append('')}>Add Tag</Button>
+                :
+                <div>
+                  no tag
+                </div>
+              }
               <FormMessage />
             </FormItem>
             <FormField
@@ -246,7 +269,7 @@ const Task = () => {
                     options={allAssigneeMatra?.map((assignee) => ({ value: assignee._id, label: assignee.username }))}
                     value={selectedOption}
                     onChange={(selected) => {
-                      setSelectedOption(selected);
+                      setSelectedOption(selected as multiSelect[]);
                       field.onChange(selected.map(option => option?.value));
                     }}
                     className="text-teal-500"

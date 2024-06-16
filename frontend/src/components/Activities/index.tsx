@@ -1,4 +1,3 @@
-
 import { getActivities } from "@/api/activity";
 import {
   Sheet,
@@ -42,7 +41,7 @@ export function Activities() {
         setLoading(true)
         const res = await getActivities()
         if (!res) {
-            toast.error("kei aayena")
+            toast.error("kei aayena",{className:'bg-red-500'})
             setLoading(false)
         }
         setActivities(res.data.data)

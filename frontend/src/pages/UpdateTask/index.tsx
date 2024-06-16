@@ -1,10 +1,10 @@
-import { useForm, useFieldArray, SubmitHandler } from 'react-hook-form';
+import { useForm, SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import axios from 'axios';
 
 import { useUser } from '@/Context/UserContext';
@@ -20,6 +20,7 @@ import { toast } from 'sonner';
 import { useActiveItems } from '@/Context/ActiveComponent';
 import { useTask } from '@/Context/TaskContext';
 import { useRefresh } from '@/Context/RefreshPage';
+import { multiSelect } from '../CreateTask';
 
 interface Error {
   message: string;
@@ -42,12 +43,14 @@ type FormValues = z.infer<typeof taskSchema>;
 
 
 
+
 const Updated = () => {
  const {singleTaskInfo} = useTask()
   const {setShowUpdate} = useActiveItems()
   const form =useForm<FormValues>({
     resolver: zodResolver(taskSchema),
     defaultValues: {
+    
       title:singleTaskInfo?.title || ''  ,
       desc: singleTaskInfo?.desc || '',
       tags: singleTaskInfo?.tags || [''],
@@ -59,16 +62,39 @@ const Updated = () => {
     },
   });
   
-  const { control, register, handleSubmit } = form;
-  const { fields, append, remove } = useFieldArray({
-    control,
-    name: 'tags',
-  });
- const [selectedOption, setSelectedOption] = useState(null);
-  const [error, setError] = useState<Error | null>(null);
+  
+  const { control, handleSubmit } = form;
+  
+ const [selectedOption, setSelectedOption] = useState<multiSelect[]>([]);
+  const [_error, setError] = useState<Error | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const { user,users } = useUser();
   const {setRefresh} = useRefresh()
+   const [tags, setTags] = useState<string[]>([]);
+  const [currentTag, setCurrentTag] = useState<string>('');
+
+  const handleTagChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setCurrentTag(event.target.value);
+  };
+   useEffect(() => {
+    if (singleTaskInfo && singleTaskInfo.tags) {
+      setTags(singleTaskInfo.tags);
+    }
+  }, [singleTaskInfo]);
+  
+
+   const handleAddTag = () => {
+    if (currentTag.trim() !== '') {
+      setTags([...tags, currentTag.trim()]);
+      setCurrentTag(''); // Clear the input field after adding a tag
+    }
+  };
+  
+  const removeTag = (tag:string) => {
+    if (tags.includes(tag)) {
+      setTags(tags.filter(t => t !== tag));
+    }
+  }
   
   const allAssigneeMatra = users?.data.filter(use=>use?._id!==user?.data?._id)
   const assigneesInfo:string[] = []
@@ -76,6 +102,7 @@ const Updated = () => {
     return assignees?.map((assignee:any)=>assigneesInfo.push(assignee.value))
  }
   ReDefineAssignee(selectedOption)
+  
   const onSubmit: SubmitHandler<FormValues> = async (values) => {
 
     try {
@@ -85,6 +112,7 @@ const Updated = () => {
       }
       values.assigner = user && user.data._id;
       values.assignee = assigneesInfo
+      values.tags = tags
       const response = await updateTask(singleTaskInfo?._id,values);
       if (response) {
         setError(null);
@@ -103,7 +131,7 @@ const Updated = () => {
       }
     }
   };
- console.log(singleTaskInfo)
+ 
   
   return (
     <section className=" z-50 overflow-y-auto">
@@ -136,23 +164,24 @@ const Updated = () => {
                 </FormItem>
               )}
             />
-            <FormItem className="space-y-5">
-              <FormLabel className="text-teal-500 text-lg">Tags</FormLabel>
-              {fields.map((field, index) => (
-                <div key={field.id} className="flex items-center space-x-2">
-                  <FormControl>
-                    <Input
-                      {...register(`tags.${index}` as const)}
-                      defaultValue={'tags'} 
-                      placeholder="tags"
-                    />
-                  </FormControl>
-                  <Button type="button" onClick={() => remove(index)}>
-                    Remove
-                  </Button>
+             <FormItem className="space-y-5">
+              <FormLabel className="text-teal-500 text-lg flex">Tags</FormLabel>
+              <Input type="text" placeholder='enter the tag' value={currentTag} onChange={handleTagChange} />
+              <Button type="button" className='bg-teal-500 hover:bg-purple-500' onClick={handleAddTag}>Add Tag</Button>
+              {
+                tags.length > 0 ?
+                <div>
+                  {
+                    tags.map(tag=>(
+                      <div className='bg-slate-100 shadow-md inline px-2 py-1 rounded-full cursor-pointer mr-2' onClick={()=>removeTag(tag)}>{tag} <span className='text-red-500'>x</span></div>
+                    ))
+                  }
                 </div>
-              ))}
-              <Button type="button" className='bg-teal-500 hover:bg-purple-500' onClick={() => append('')}>Add Tag</Button>
+                :
+                <div>
+                  no tag
+                </div>
+              }
               <FormMessage />
             </FormItem>
             <FormField
@@ -246,7 +275,7 @@ const Updated = () => {
                     options={allAssigneeMatra?.map((assignee) => ({ value: assignee._id, label: assignee.username }))}
                     value={selectedOption}
                     onChange={(selected) => {
-                      setSelectedOption(selected);
+                      setSelectedOption(selected as multiSelect[]);
                       field.onChange(selected.map(option => option?.value));
                     }}
                     className="text-teal-500"

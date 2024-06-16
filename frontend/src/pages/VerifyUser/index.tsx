@@ -32,8 +32,8 @@ const Verify = () => {
     },
   })
   const navigate = useNavigate()
-  const [userInfo,setUserInfo] = useState({})
-  const [error,setError] = useState<Error | null>(null)
+  const [_userInfo,setUserInfo] = useState({})
+  const [_error,setError] = useState<Error | null>(null)
   const [loading,setLoading] = useState<boolean>(false)
   const [tryCount,setTryCount] = useState<number>(0)
 

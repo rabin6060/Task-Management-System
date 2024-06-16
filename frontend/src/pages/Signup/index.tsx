@@ -44,8 +44,10 @@ const Signup = () => {
     resolver:zodResolver(schema)
   }
   )
+  
+  
   const navigate = useNavigate()
-  const [error,setError] = useState<Error | null>(null)
+  const [_error,setError] = useState<Error | null>(null)
   const [loading,setLoading] = useState<boolean>(false)
 
   async function onSubmit(values:any) {

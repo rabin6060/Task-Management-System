@@ -43,7 +43,7 @@ const Login = () => {
   )
   const navigate = useNavigate()
  
-  const [error,setError] = useState<Error | null>(null)
+  const [_error,setError] = useState<Error | null>(null)
   const [loading,setLoading] = useState<boolean>(false)
   const {setUser} = useUser()
 
@@ -67,7 +67,7 @@ const Login = () => {
        if (error.response) {
         setLoading(false)
         setError(error.response.data)
-        toast.error("Invalid Email or Password Login Failed!!!")
+        toast.error("Invalid Email or Password Login Failed!!!",{className:'bg-red-500 text-black'})
       }
      }
     }
