@@ -12,8 +12,13 @@ import { MdDelete } from "react-icons/md";
 import { useUser } from '@/Context/UserContext';
 import { TaskDetailsSkeleton } from '../SkeletonDetail';
 import { useRefresh } from '@/Context/RefreshPage';
-// Adjust the import path as needed
-
+import { io, Socket } from 'socket.io-client'
+ // Adjust the import path as needed
+interface comment{
+  taskId:string,
+  content:string,
+  user:string
+}
 interface TaskDetailProps {
   id: string | '';
   setShowDetail: (showDetail: boolean) => void;
@@ -23,10 +28,26 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ id, setShowDetail }) => {
   const { setShowUpdate } = useActiveItems();
   const {user} = useUser()
   const [comment,setComment] = useState<string>('')
-  
+   const [socket, setSocket] = useState<Socket | null>(null);
   const [task,setSingleTaskInfo] = useState<Task | undefined>()
   const {setRefresh,loading} = useRefresh()
   const [ref,setRef] = useState<boolean>(false)
+  const [getComment,setComments] = useState<comment[]>([])
+  useEffect(() => {
+    const newSocket = io('http://localhost:7000'); // Replace with your server URL
+    setSocket(newSocket);
+
+    newSocket.on('newComment', (newComment) => {
+      setComments(prev=>{
+        return [...prev , newComment]
+      })
+      });
+  
+
+    return () => {
+      newSocket.close();
+    };
+  }, []);
 
   
   const handleDelete = async (id: string) => {
@@ -59,6 +80,7 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ id, setShowDetail }) => {
       setSingleTaskInfo(res && res.data.data);
       setShowDetail(false);
       setShowUpdate(true);
+      setRefresh(true)
       
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {
@@ -71,6 +93,9 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ id, setShowDetail }) => {
 
   const handleAdd = async(e:any) => {
     e.preventDefault()
+    if (socket) {
+      socket.emit('postComment', { taskId: task?._id, content: comment, user: user?.data.username,userId:user?.data._id });
+    }
     
     try {
       const res = await addComment(task?._id,comment)
@@ -120,7 +145,6 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ id, setShowDetail }) => {
     }
     fetch(id)
   },[id,ref])
-
 const taskDueDate = new Date(task && task?.dueDate || '');
 const now = new Date();
 
@@ -195,6 +219,7 @@ if (diffInDays > 0) {
             </div>
             <Button type='submit' onClick={(e)=>handleAdd(e)} className='bg-teal-500 hover:bg-purple-500 w-auto'>Add</Button>
           </form>
+          
           {
            task && task.comments.length>0 ?
             <div className='flex flex-col gap-2 h-[300px] overflow-y-auto'>

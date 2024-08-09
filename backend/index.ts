@@ -10,13 +10,22 @@ import { connectToDB } from './src/config/dbConnect';
 import deSerializeUser from './src/Middleware/deSerializeUser';
 import { globalErrorHandler } from './src/Middleware/globalErrorHandler';
 import CustomError from './src/utils/Error';
-import cookieParser from 'cookie-parser'
+import cookieParser from 'cookie-parser';
+import { createServer } from 'node:http';
 
+import { Server } from 'socket.io';
 
 (async () => {
   const app = express();
+  const server = createServer(app);
+  const io = new Server(server, {
+    cors: {
+      origin: env.cors,
+      methods: ['GET', 'POST'],
+    },
+  });
   app.use(bodyParser.json());
-  app.use(cookieParser())
+  app.use(cookieParser());
   app.use(cors(env.cors ? { origin: env.cors, optionsSuccessStatus: 200 } : undefined));
 
   morgan.token('level', (req: Request, res: Response) => {
@@ -43,8 +52,18 @@ import cookieParser from 'cookie-parser'
   });
 
   app.use(globalErrorHandler);
+  io.on('connection', socket => {
+    console.log('a user connected');
+    socket.on('postComment', async(comment) => {
+      console.log('receieve comment', comment);
+      io.emit('newComment', comment);
+    });
+    socket.on('disconnect', () => {
+      console.log('user disconnected');
+    });
+  });
 
-  app.listen(env.port, async () => {
+  server.listen(env.port, async () => {
     await connectToDB();
     console.log(`The application is listening on port \x1b[4m\x1b[31m${env.port}\x1b[0m`);
   });
@@ -52,7 +71,7 @@ import cookieParser from 'cookie-parser'
   process.on('SIGINT', () => {
     process.exit();
   });
-  // Unhandled Promise Rejections
+
   process.on('unhandledRejection', (reason, promise) => {
     logger.error(JSON.stringify({ message: `Unhandled Rejection at:, ${promise}`, error: reason }));
   });

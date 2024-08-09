@@ -108,10 +108,11 @@ const Task = () => {
       values.assignee = assigneesInfo
       values.tags = tags
       const response = await createTask(values);
-      if (response) {
-        setError(null);
-        setShow(false);
+      if (!response) {
+        toast.error("task creation failed")
       }
+      setError(null);
+      setShow(false);
       setLoading(false);
       setRefresh(true)
       setActiveItem("TaskCreated")

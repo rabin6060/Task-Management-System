@@ -1,16 +1,29 @@
-FROM node:18.16.1 as builder
+# Stage 1: Build the React application
+FROM node:18.17.0 AS build
+
+# Set the working directory inside the container
 WORKDIR /app
-COPY package*.json ./
-RUN npm ci
+
+# Copy package.json and package-lock.json to the working directory
+COPY package.json package-lock.json ./
+
+# Install dependencies
+RUN npm install
+
+# Copy the rest of the application files to the working directory
 COPY . .
+
+# Build the application
 RUN npm run build
 
-FROM node:18.16.1 as prod
-ARG NODE_ENV=production
-ENV NODE_ENV=${NODE_ENV}
-WORKDIR /usr/app
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/dist ./dist
-COPY  package.json ./
+# Stage 2: Serve the built files using a lightweight web server
+FROM nginx:alpine
 
-ENTRYPOINT ["node", "dist/index.js"]
+# Copy the built files from the previous stage
+COPY --from=build /app/dist /usr/share/nginx/html
+
+# Expose port 7000
+EXPOSE 7000
+
+# Start nginx server
+CMD ["nginx", "-g", "daemon off;"]

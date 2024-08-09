@@ -33,7 +33,7 @@ const Header = () => {
   return (
     <header className="w-full h-[60px] shadow-md sticky top-0 z-50 bg-slate-200">
       <nav className='sm:w-full max-w-[70%] h-full mx-auto flex items-center justify-between'>
-        <Link to={'/'} className='text-3xl font-[900] text-teal-400'>DO_TO_TO...</Link>
+        <Link to={'/'} className='text-4xl font-[900] text-teal-400'>To Do</Link>
         <div className='flex gap-2'>
           {user ? (
             <>
